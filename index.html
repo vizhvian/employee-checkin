@@ -38,6 +38,7 @@
             justify-content: center;
             align-items: center;
             color: #333;
+            padding: 20px;
         }
 
         .container {
@@ -45,15 +46,23 @@
             padding: 2rem;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            max-width: 400px;
-            width: 90%;
+            max-width: 420px;
+            width: 100%;
             text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         h1 {
             font-size: 1.8rem;
             margin-bottom: 1.5rem;
             color: #4f46e5;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #374151;
         }
 
         .form-group {
@@ -111,19 +120,21 @@
             padding: 0.5rem;
             border-radius: 8px;
             margin: 0.5rem 0;
+            font-size: 0.8rem;
         }
 
         .btn {
             background: #4f46e5;
             color: white;
             border: none;
-            padding: 1rem 2rem;
+            padding: 1rem 1.5rem;
             border-radius: 12px;
-            font-size: 1.1rem;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin: 0.5rem;
-            min-width: 120px;
+            margin: 0.25rem;
+            min-width: 100px;
+            display: inline-block;
         }
 
         .btn:hover {
@@ -156,17 +167,41 @@
         .btn-secondary {
             background: #6b7280;
             padding: 0.5rem 1rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .btn-secondary:hover {
             background: #4b5563;
         }
 
+        .main-buttons {
+            margin: 1.5rem 0;
+        }
+
+        .test-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .test-section h4 {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .test-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+        }
+
         .alert {
             padding: 1rem;
             border-radius: 8px;
             margin: 1rem 0;
+            text-align: left;
         }
 
         .alert-info {
@@ -207,6 +242,7 @@
             padding: 1rem;
             border-radius: 8px;
             margin: 0.5rem 0;
+            font-size: 0.9rem;
         }
 
         .history-user {
@@ -218,11 +254,13 @@
         .history-details {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 0.5rem;
         }
 
         .time {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #64748b;
         }
 
@@ -233,6 +271,7 @@
             border-radius: 8px;
             margin: 1rem 0;
             border-left: 4px solid #f59e0b;
+            font-size: 0.9rem;
         }
 
         .hidden {
@@ -255,16 +294,45 @@
             padding: 1rem;
             margin: 1rem 0;
             font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             text-align: left;
             max-height: 200px;
             overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        details {
+            margin-top: 2rem;
+        }
+
+        summary {
+            cursor: pointer;
+            color: #4f46e5;
+            font-weight: 600;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
         }
 
         @media (max-width: 480px) {
             .container {
                 padding: 1.5rem;
-                margin: 1rem;
+                margin: 10px;
+                max-height: 95vh;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+                min-width: 80px;
+            }
+
+            .history-details {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
@@ -321,20 +389,31 @@
                 </div>
             </div>
 
-            <div>
+            <div class="main-buttons">
                 <button id="checkinBtn" class="btn btn-success" onclick="checkIn()" disabled>
                     <span class="loading" style="display:none;">⏳</span>
                     เช็คอิน
                 </button>
-                <button id="checkoutBtn" class="btn btn-danger" onclick="checkOut(); console.log('คลิกปุ่ม checkout');" disabled>
+                <button id="checkoutBtn" class="btn btn-danger" onclick="checkOut()" disabled>
                     <span class="loading" style="display:none;">⏳</span>
                     เช็คเอาต์
                 </button>
-                
-                <!-- ปุ่มทดสอบ (จะลบทิ้งหลังแก้เสร็จ) -->
-                <button class="btn btn-secondary" onclick="forceCheckout()" style="margin-top: 10px; font-size: 0.8rem;">
-                    🔧 Force Checkout (ทดสอบ)
-                </button>
+            </div>
+
+            <!-- เครื่องมือทดสอบ -->
+            <div class="test-section">
+                <h4>🔧 เครื่องมือทดสอบ</h4>
+                <div class="test-buttons">
+                    <button class="btn btn-secondary" onclick="forceCheckout()">
+                        🔧 Force Checkout
+                    </button>
+                    <button class="btn btn-secondary" onclick="testWebhook()">
+                        🧪 ทดสอบ Webhook
+                    </button>
+                    <button class="btn btn-secondary" onclick="console.clear(); console.log('Console cleared')">
+                        🗑️ Clear Console
+                    </button>
+                </div>
             </div>
 
             <div id="installPrompt" class="install-prompt" style="display:none;">
@@ -344,12 +423,12 @@
 
             <div class="history">
                 <h3>ประวัติการเช็คอิน</h3>
-                <div id="historyList"></div>
+                <div id="historyList">กำลังโหลด...</div>
             </div>
 
             <!-- ข้อมูลสำหรับ Webhook -->
-            <details style="margin-top: 2rem;">
-                <summary style="cursor: pointer; color: #4f46e5; font-weight: 600;">📡 ข้อมูล Webhook (สำหรับ n8n)</summary>
+            <details>
+                <summary>📡 ข้อมูล Webhook (สำหรับ n8n)</summary>
                 <div class="webhook-data" id="webhookData">
                     ข้อมูลจะแสดงหลังจากเช็คอิน/เช็คเอาต์
                 </div>
@@ -362,6 +441,7 @@
         let isCheckedIn = false;
         let deferredPrompt = null;
         let currentUser = null;
+        let isProcessingCheckout = false;
 
         // ฟังก์ชันเริ่มต้น
         document.addEventListener('DOMContentLoaded', function() {
@@ -468,6 +548,7 @@
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('checkedIn');
                 localStorage.removeItem('checkinTime');
+                localStorage.removeItem('checkinUser');
                 currentUser = null;
                 
                 document.getElementById('mainApp').classList.add('hidden');
@@ -551,8 +632,9 @@
             }
 
             const btn = document.getElementById('checkinBtn');
+            const loadingSpan = btn.querySelector('.loading');
             btn.disabled = true;
-            btn.querySelector('.loading').style.display = 'inline-block';
+            loadingSpan.style.display = 'inline-block';
 
             // อัพเดทตำแหน่งใหม่
             navigator.geolocation.getCurrentPosition(
@@ -579,9 +661,6 @@
                     // ส่งข้อมูลไป n8n
                     sendToN8N(record);
                     
-                    // ส่งข้อมูลไป n8n
-                    sendToN8N(record);
-                    
                     // อัพเดทสถานะ
                     isCheckedIn = true;
                     localStorage.setItem('checkedIn', 'true');
@@ -592,39 +671,56 @@
                     showAlert('success', `✅ รหัส ${currentUser.employeeId} เช็คอินสำเร็จ!`);
                     
                     btn.disabled = false;
-                    btn.querySelector('.loading').style.display = 'none';
+                    loadingSpan.style.display = 'none';
                 },
                 function(error) {
                     showAlert('error', 'ไม่สามารถรับตำแหน่งได้ กรุณาลองใหม่');
                     btn.disabled = false;
-                    btn.querySelector('.loading').style.display = 'none';
+                    loadingSpan.style.display = 'none';
                 }
             );
         }
 
-        // ฟังก์ชันเช็คเอาต์
+        // ฟังก์ชันเช็คเอาต์ - แก้ไขแล้ว
         function checkOut() {
+            console.log('=== เริ่ม checkOut function ===');
+            
+            // ป้องกันการคลิกซ้ำ
+            if (isProcessingCheckout) {
+                console.log('กำลังประมวลผล checkout อยู่...');
+                return;
+            }
+            
             // เช็คสถานะใหม่ทุกครั้ง
             const currentCheckedIn = localStorage.getItem('checkedIn') === 'true';
             const checkinUser = localStorage.getItem('checkinUser');
+            
+            console.log('สถานะตรวจสอบ:', {
+                currentCheckedIn,
+                checkinUser,
+                currentUser: currentUser?.employeeId
+            });
             
             if (!currentCheckedIn || checkinUser !== currentUser.employeeId) {
                 showAlert('error', 'กรุณาเช็คอินก่อน');
                 return;
             }
             
-            // รีเซ็ต isProcessing สำหรับ checkout
-            if (isProcessing) {
-                console.log('รีเซ็ต processing สำหรับ checkout');
-                isProcessing = false;
-            }
-
+            // เริ่มประมวลผล
+            isProcessingCheckout = true;
+            
             const btn = document.getElementById('checkoutBtn');
+            const loadingSpan = btn.querySelector('.loading');
+            
             btn.disabled = true;
-            btn.querySelector('.loading').style.display = 'inline-block';
+            loadingSpan.style.display = 'inline-block';
+            
+            console.log('เริ่มขอตำแหน่ง GPS สำหรับ checkout...');
 
             navigator.geolocation.getCurrentPosition(
                 function(position) {
+                    console.log('ได้ตำแหน่ง GPS แล้ว:', position.coords);
+                    
                     currentPosition = position;
                     const now = new Date();
                     const record = {
@@ -640,9 +736,15 @@
                         }
                     };
 
+                    console.log('ข้อมูล checkout ที่จะส่ง:', record);
+
                     // บันทึกประวัติและ webhook data
                     saveToHistory(record);
                     updateWebhookData(record);
+                    
+                    // ส่งข้อมูลไป n8n (เรียกทันที)
+                    console.log('เริ่มส่งข้อมูลไป webhook...');
+                    sendToN8N(record);
                     
                     // อัพเดทสถานะ
                     isCheckedIn = false;
@@ -653,24 +755,82 @@
                     updateStatus();
                     showAlert('success', `✅ รหัส ${currentUser.employeeId} เช็คเอาต์สำเร็จ!`);
                     
+                    // รีเซ็ตปุ่ม
                     btn.disabled = false;
-                    btn.querySelector('.loading').style.display = 'none';
+                    loadingSpan.style.display = 'none';
+                    isProcessingCheckout = false;
+                    
+                    console.log('=== เสร็จสิ้น checkOut function ===');
                 },
                 function(error) {
+                    console.error('GPS Error:', error);
                     showAlert('error', 'ไม่สามารถรับตำแหน่งได้ กรุณาลองใหม่');
+                    
+                    // รีเซ็ตปุ่ม
                     btn.disabled = false;
-                    btn.querySelector('.loading').style.display = 'none';
+                    loadingSpan.style.display = 'none';
+                    isProcessingCheckout = false;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 15000,  // เพิ่มเวลารอเป็น 15 วินาที
+                    maximumAge: 0    // ไม่ใช้ cache เก่า
                 }
             );
+        }
+
+        // ฟังก์ชันทดสอบ checkout
+        function forceCheckout() {
+            console.log('=== Force Checkout (ทดสอบ) ===');
+            
+            if (!currentUser) {
+                alert('กรุณาเข้าสู่ระบบก่อน');
+                return;
+            }
+            
+            // บังคับตั้งสถานะเป็นเช็คอินก่อน
+            localStorage.setItem('checkedIn', 'true');
+            localStorage.setItem('checkinUser', currentUser.employeeId);
+            localStorage.setItem('checkinTime', new Date().toISOString());
+            
+            isCheckedIn = true;
+            updateStatus();
+            
+            alert('บังคับตั้งสถานะเป็นเช็คอินแล้ว กรุณาลองเช็คเอาต์');
+        }
+
+        // ฟังก์ชันทดสอบส่ง webhook
+        function testWebhook() {
+            if (!currentUser) {
+                alert('กรุณาเข้าสู่ระบบก่อน');
+                return;
+            }
+            
+            const testData = {
+                action: 'test_checkout',
+                employeeId: currentUser.employeeId,
+                passcode: currentUser.passcode,
+                timestamp: new Date().toISOString(),
+                datetime: new Date().toLocaleString('th-TH'),
+                location: {
+                    latitude: 13.7563,
+                    longitude: 100.5018,
+                    accuracy: 10
+                }
+            };
+            
+            console.log('ทดสอบส่ง webhook...');
+            sendToN8N(testData);
+            alert('ทดสอบส่ง webhook แล้ว ดู console log (กด F12)');
         }
 
         // อัพเดทข้อมูล webhook
         function updateWebhookData(record) {
             const webhookDiv = document.getElementById('webhookData');
-            webhookDiv.innerHTML = `<strong>ข้อมูลล่าสุด:</strong>
+            webhookDiv.innerHTML = `ข้อมูลล่าสุด:
 ${JSON.stringify(record, null, 2)}
 
-<strong>URL สำหรับ webhook:</strong>
+URL สำหรับ webhook:
 GET: ${window.location.origin}${window.location.pathname}?data=latest
 POST: ส่งข้อมูลไปยัง n8n webhook endpoint`;
             
@@ -749,6 +909,81 @@ POST: ส่งข้อมูลไปยัง n8n webhook endpoint`;
             }
         }
 
+        // ฟังก์ชันส่งข้อมูลไป n8n - แก้ไขแล้ว
+        function sendToN8N(data) {
+            const webhookUrl = 'https://vizhvian.app.n8n.cloud/webhook-test/955a2d77-64d6-4c9f-b652-2eef8007dc6f';
+            
+            console.log('=== เริ่มส่งข้อมูลไป n8n ===');
+            console.log('Action:', data.action);
+            console.log('Employee ID:', data.employeeId);
+            console.log('Webhook URL:', webhookUrl);
+            
+            // สร้างข้อมูลให้ครบถ้วน
+            const completeData = {
+                action: data.action,
+                employeeId: data.employeeId,
+                passcode: data.passcode,
+                timestamp: data.timestamp,
+                datetime: data.datetime,
+                location: data.location,
+                // เพิ่มข้อมูลสำรอง
+                lat: data.location.latitude,
+                lng: data.location.longitude,
+                accuracy: data.location.accuracy,
+                user_id: data.employeeId,
+                user_code: data.passcode,
+                check_type: data.action,
+                check_time: data.timestamp,
+                check_datetime: data.datetime,
+                unique_id: `${data.employeeId}_${data.action}_${Date.now()}`
+            };
+            
+            console.log('ข้อมูลที่ส่ง:', JSON.stringify(completeData, null, 2));
+            
+            // ส่งแบบปกติก่อน
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(completeData)
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (response.ok) {
+                    console.log('✅ ส่งข้อมูลไป n8n สำเร็จ (โหมดปกติ)');
+                    return response.text();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            })
+            .then(responseText => {
+                console.log('Response body:', responseText);
+            })
+            .catch(error => {
+                console.log('❌ ส่งแบบปกติไม่ได้:', error);
+                console.log('🔄 ลองส่งแบบ no-cors...');
+                
+                // หากไม่ได้ ลองแบบ no-cors
+                return fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(completeData)
+                })
+                .then(() => {
+                    console.log('✅ ส่งข้อมูลไป n8n แล้ว (no-cors mode)');
+                })
+                .catch(err => {
+                    console.error('❌ ส่งข้อมูลไม่ได้เลย:', err);
+                });
+            });
+        }
+
         // PWA Installation
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
@@ -785,63 +1020,15 @@ POST: ส่งข้อมูลไปยัง n8n webhook endpoint`;
             return JSON.parse(localStorage.getItem('checkinHistory') || '[]');
         };
 
-        // ฟังก์ชันส่งข้อมูลไป n8n - เวอร์ชั่นง่าย
-        function sendToN8N(data) {
-            const webhookUrl = 'https://vizhvian.app.n8n.cloud/webhook-test/955a2d77-64d6-4c9f-b652-2eef8007dc6f';
-            
-            // สร้างข้อมูลให้ครบถ้วน
-            const completeData = {
-                action: data.action,
-                employeeId: data.employeeId,
-                passcode: data.passcode,
-                timestamp: data.timestamp,
-                datetime: data.datetime,
-                location: data.location,
-                // เพิ่มข้อมูลสำรอง
-                lat: data.location.latitude,
-                lng: data.location.longitude,
-                accuracy: data.location.accuracy,
-                user_id: data.employeeId,
-                user_code: data.passcode,
-                check_type: data.action,
-                check_time: data.timestamp,
-                check_datetime: data.datetime,
-                unique_id: `${data.employeeId}_${data.action}_${Date.now()}`
-            };
-            
-            // ส่งแบบปกติก่อน
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(completeData)
-            })
-            .then(response => {
-                if (response.ok) {
-                    console.log('ส่งข้อมูลไป n8n สำเร็จ (โหมดปกติ)');
-                } else {
-                    throw new Error('Response not ok');
-                }
-            })
-            .catch(error => {
-                console.log('ลองส่งแบบ no-cors...');
-                
-                // หากไม่ได้ ลองแบบ no-cors
-                fetch(webhookUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(completeData)
-                })
-                .then(() => {
-                    console.log('ส่งข้อมูลไป n8n แล้ว (no-cors mode)');
-                })
-                .catch(err => {
-                    console.error('ส่งข้อมูลไม่ได้:', err);
-                });
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('SW registered: ', registration);
+                    }, function(registrationError) {
+                        console.log('SW registration failed: ', registrationError);
+                    });
             });
         }
     </script>
