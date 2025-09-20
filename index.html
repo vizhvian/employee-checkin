@@ -190,11 +190,23 @@
             margin-bottom: 10px;
         }
 
-        .test-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            justify-content: center;
+        .debug-section {
+            background: #fff3cd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid #ffc107;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        .debug-log {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: #495057;
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
         }
 
         .alert {
@@ -380,6 +392,12 @@
                 กำลังขอสิทธิ์เข้าถึงตำแหน่ง...
             </div>
 
+            <!-- Debug Section -->
+            <div class="debug-section">
+                <h4>🐛 Debug Information</h4>
+                <div id="debugLog" class="debug-log">พร้อมใช้งาน</div>
+            </div>
+
             <div class="status-card">
                 <h3>สถานะปัจจุบัน</h3>
                 <div id="currentStatus">ยังไม่ได้เช็คอิน</div>
@@ -390,11 +408,11 @@
             </div>
 
             <div class="main-buttons">
-                <button id="checkinBtn" class="btn btn-success" onclick="checkIn()" disabled>
+                <button id="checkinBtn" class="btn btn-success" disabled>
                     <span class="loading" style="display:none;">⏳</span>
                     เช็คอิน
                 </button>
-                <button id="checkoutBtn" class="btn btn-danger" onclick="checkOut()" disabled>
+                <button id="checkoutBtn" class="btn btn-danger" disabled>
                     <span class="loading" style="display:none;">⏳</span>
                     เช็คเอาต์
                 </button>
@@ -403,17 +421,15 @@
             <!-- เครื่องมือทดสอบ -->
             <div class="test-section">
                 <h4>🔧 เครื่องมือทดสอบ</h4>
-                <div class="test-buttons">
-                    <button class="btn btn-secondary" onclick="forceCheckout()">
-                        🔧 Force Checkout
-                    </button>
-                    <button class="btn btn-secondary" onclick="testWebhook()">
-                        🧪 ทดสอบ Webhook
-                    </button>
-                    <button class="btn btn-secondary" onclick="console.clear(); console.log('Console cleared')">
-                        🗑️ Clear Console
-                    </button>
-                </div>
+                <button class="btn btn-secondary" id="forceBtn">
+                    🔧 Force Checkout
+                </button>
+                <button class="btn btn-secondary" id="testBtn">
+                    🧪 ทดสอบ Webhook
+                </button>
+                <button class="btn btn-secondary" id="clearBtn">
+                    🗑️ Clear Debug
+                </button>
             </div>
 
             <div id="installPrompt" class="install-prompt" style="display:none;">
@@ -437,36 +453,67 @@
     </div>
 
     <script>
+        // ===== ตัวแปรหลัก =====
         let currentPosition = null;
         let isCheckedIn = false;
         let deferredPrompt = null;
         let currentUser = null;
         let isProcessingCheckout = false;
 
-        // ฟังก์ชันเริ่มต้น
+        // ===== ฟังก์ชัน Debug =====
+        function debugLog(message) {
+            const debugDiv = document.getElementById('debugLog');
+            const timestamp = new Date().toLocaleTimeString('th-TH');
+            debugDiv.textContent += `[${timestamp}] ${message}\n`;
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+            console.log(`[DEBUG] ${message}`);
+        }
+
+        function clearDebugLog() {
+            document.getElementById('debugLog').textContent = 'Debug log cleared\n';
+            console.clear();
+        }
+
+        // ===== ฟังก์ชันเริ่มต้น =====
         document.addEventListener('DOMContentLoaded', function() {
+            debugLog('🚀 แอปเริ่มต้น');
             checkExistingLogin();
             setupLoginForm();
+            setupEventListeners();
         });
 
-        // ตรวจสอบว่ามีการเข้าสู่ระบบอยู่หรือไม่
+        function setupEventListeners() {
+            // ปุ่มหลัก
+            document.getElementById('checkinBtn').addEventListener('click', checkIn);
+            document.getElementById('checkoutBtn').addEventListener('click', checkOut);
+            
+            // ปุ่มทดสอบ
+            document.getElementById('forceBtn').addEventListener('click', forceCheckout);
+            document.getElementById('testBtn').addEventListener('click', testWebhook);
+            document.getElementById('clearBtn').addEventListener('click', clearDebugLog);
+            
+            // ปุ่มออกจากระบบ
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            
+            debugLog('✅ Event listeners ตั้งค่าเสร็จ');
+        }
+
+        // ===== ระบบเข้าสู่ระบบ =====
         function checkExistingLogin() {
             const savedUser = localStorage.getItem('currentUser');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
+                debugLog(`📱 พบผู้ใช้: ${currentUser.employeeId}`);
                 showMainApp();
+            } else {
+                debugLog('❌ ไม่พบข้อมูลผู้ใช้');
             }
         }
 
-        // ตั้งค่าฟอร์มเข้าสู่ระบบ
         function setupLoginForm() {
             document.getElementById('loginForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 handleLogin();
-            });
-
-            document.getElementById('logoutBtn').addEventListener('click', function() {
-                logout();
             });
 
             // รหัสยืนยันรับเฉพาะตัวเลข
@@ -475,7 +522,6 @@
             });
         }
 
-        // ฟังก์ชันเข้าสู่ระบบ
         function handleLogin() {
             const employeeId = document.getElementById('employeeId').value.trim();
             const passcode = document.getElementById('passcode').value.trim();
@@ -502,7 +548,7 @@
             loginBtn.disabled = true;
             loadingSpan.style.display = 'inline-block';
 
-            // จำลองการตรวจสอบ (ไม่เช็ครหัสจริง เพื่อให้ใช้งานได้ทุกรหัส)
+            // จำลองการตรวจสอบ
             setTimeout(() => {
                 currentUser = {
                     employeeId: employeeId,
@@ -513,7 +559,7 @@
                 // บันทึกข้อมูลผู้ใช้
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
-                // เข้าสู่แอปหลัก
+                debugLog(`✅ เข้าสู่ระบบสำเร็จ: ${employeeId}`);
                 showMainApp();
                 
                 loginBtn.disabled = false;
@@ -521,14 +567,12 @@
             }, 1000);
         }
 
-        // แสดงข้อความผิดพลาดการเข้าสู่ระบบ
         function showLoginError(message) {
             const errorDiv = document.getElementById('loginError');
             errorDiv.textContent = message;
             errorDiv.classList.remove('hidden');
         }
 
-        // แสดงแอปหลัก
         function showMainApp() {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
@@ -542,9 +586,9 @@
             loadStatus();
         }
 
-        // ฟังก์ชันออกจากระบบ
         function logout() {
             if (confirm('ต้องการออกจากระบบหรือไม่?')) {
+                debugLog('👋 ออกจากระบบ');
                 localStorage.removeItem('currentUser');
                 localStorage.removeItem('checkedIn');
                 localStorage.removeItem('checkinTime');
@@ -559,18 +603,21 @@
             }
         }
 
-        // ขอสิทธิ์เข้าถึงตำแหน่ง
+        // ===== ระบบ GPS =====
         function checkLocationPermission() {
             if (!navigator.geolocation) {
+                debugLog('❌ อุปกรณ์ไม่รองรับ GPS');
                 showAlert('error', 'อุปกรณ์ของคุณไม่รองรับ GPS');
                 return;
             }
 
+            debugLog('📍 ขอสิทธิ์เข้าถึงตำแหน่ง...');
             showAlert('info', 'กำลังขอสิทธิ์เข้าถึงตำแหน่ง...');
             
             navigator.geolocation.getCurrentPosition(
                 function(position) {
                     currentPosition = position;
+                    debugLog(`✅ ได้รับตำแหน่ง: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`);
                     showAlert('success', 'ได้รับสิทธิ์เข้าถึงตำแหน่งแล้ว ✅');
                     updateLocationInfo(position);
                     enableButtons();
@@ -588,6 +635,7 @@
                             message = 'หมดเวลาในการหาตำแหน่ง';
                             break;
                     }
+                    debugLog(`❌ GPS Error: ${message}`);
                     showAlert('error', message);
                 },
                 {
@@ -598,7 +646,6 @@
             );
         }
 
-        // อัพเดทข้อมูลตำแหน่ง
         function updateLocationInfo(position) {
             const lat = position.coords.latitude.toFixed(6);
             const lng = position.coords.longitude.toFixed(6);
@@ -611,22 +658,24 @@
             document.getElementById('coordinates').style.display = 'block';
         }
 
-        // เปิดใช้งานปุ่ม
         function enableButtons() {
             document.getElementById('checkinBtn').disabled = false;
             document.getElementById('checkoutBtn').disabled = false;
+            debugLog('🔓 เปิดใช้งานปุ่มแล้ว');
         }
 
-        // แสดงข้อความแจ้งเตือน
         function showAlert(type, message) {
             const alertDiv = document.getElementById('locationStatus');
             alertDiv.className = `alert alert-${type}`;
             alertDiv.innerHTML = message;
         }
 
-        // ฟังก์ชันเช็คอิน
+        // ===== ฟังก์ชันเช็คอิน =====
         function checkIn() {
+            debugLog('🟢 เริ่มเช็คอิน');
+            
             if (!currentPosition) {
+                debugLog('❌ ไม่มีข้อมูลตำแหน่ง');
                 showAlert('error', 'กรุณาอนุญาตการเข้าถึงตำแหน่งก่อน');
                 return;
             }
@@ -636,7 +685,8 @@
             btn.disabled = true;
             loadingSpan.style.display = 'inline-block';
 
-            // อัพเดทตำแหน่งใหม่
+            debugLog('📍 กำลังอัพเดทตำแหน่ง GPS...');
+
             navigator.geolocation.getCurrentPosition(
                 function(position) {
                     currentPosition = position;
@@ -654,6 +704,8 @@
                         }
                     };
 
+                    debugLog(`📝 บันทึกข้อมูลเช็คอิน: ${record.employeeId}`);
+
                     // บันทึกประวัติและ webhook data
                     saveToHistory(record);
                     updateWebhookData(record);
@@ -669,11 +721,13 @@
                     
                     updateStatus();
                     showAlert('success', `✅ รหัส ${currentUser.employeeId} เช็คอินสำเร็จ!`);
+                    debugLog('✅ เช็คอินสำเร็จ');
                     
                     btn.disabled = false;
                     loadingSpan.style.display = 'none';
                 },
                 function(error) {
+                    debugLog(`❌ GPS Error ขณะเช็คอิน: ${error.message}`);
                     showAlert('error', 'ไม่สามารถรับตำแหน่งได้ กรุณาลองใหม่');
                     btn.disabled = false;
                     loadingSpan.style.display = 'none';
@@ -681,13 +735,13 @@
             );
         }
 
-        // ฟังก์ชันเช็คเอาต์ - แก้ไขแล้ว
+        // ===== ฟังก์ชันเช็คเอาต์ - แก้ไขแล้ว =====
         function checkOut() {
-            console.log('=== เริ่ม checkOut function ===');
+            debugLog('🔴 เริ่มเช็คเอาต์');
             
             // ป้องกันการคลิกซ้ำ
             if (isProcessingCheckout) {
-                console.log('กำลังประมวลผล checkout อยู่...');
+                debugLog('⚠️ กำลังประมวลผล checkout อยู่...');
                 return;
             }
             
@@ -695,19 +749,17 @@
             const currentCheckedIn = localStorage.getItem('checkedIn') === 'true';
             const checkinUser = localStorage.getItem('checkinUser');
             
-            console.log('สถานะตรวจสอบ:', {
-                currentCheckedIn,
-                checkinUser,
-                currentUser: currentUser?.employeeId
-            });
+            debugLog(`🔍 ตรวจสอบสถานะ: checkedIn=${currentCheckedIn}, user=${checkinUser}, current=${currentUser?.employeeId}`);
             
             if (!currentCheckedIn || checkinUser !== currentUser.employeeId) {
+                debugLog('❌ ยังไม่ได้เช็คอินหรือไม่ใช่ผู้ใช้เดียวกัน');
                 showAlert('error', 'กรุณาเช็คอินก่อน');
                 return;
             }
             
             // เริ่มประมวลผล
             isProcessingCheckout = true;
+            debugLog('🔒 เริ่มประมวลผล checkout');
             
             const btn = document.getElementById('checkoutBtn');
             const loadingSpan = btn.querySelector('.loading');
@@ -715,11 +767,11 @@
             btn.disabled = true;
             loadingSpan.style.display = 'inline-block';
             
-            console.log('เริ่มขอตำแหน่ง GPS สำหรับ checkout...');
+            debugLog('📍 กำลังขอตำแหน่ง GPS สำหรับ checkout...');
 
             navigator.geolocation.getCurrentPosition(
                 function(position) {
-                    console.log('ได้ตำแหน่ง GPS แล้ว:', position.coords);
+                    debugLog(`📍 ได้ตำแหน่ง GPS: ${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`);
                     
                     currentPosition = position;
                     const now = new Date();
@@ -736,14 +788,14 @@
                         }
                     };
 
-                    console.log('ข้อมูล checkout ที่จะส่ง:', record);
+                    debugLog(`📝 ข้อมูล checkout: ${JSON.stringify(record)}`);
 
                     // บันทึกประวัติและ webhook data
                     saveToHistory(record);
                     updateWebhookData(record);
                     
-                    // ส่งข้อมูลไป n8n (เรียกทันที)
-                    console.log('เริ่มส่งข้อมูลไป webhook...');
+                    // ส่งข้อมูลไป n8n
+                    debugLog('🚀 เริ่มส่งข้อมูลไป webhook...');
                     sendToN8N(record);
                     
                     // อัพเดทสถานะ
@@ -754,16 +806,17 @@
                     
                     updateStatus();
                     showAlert('success', `✅ รหัส ${currentUser.employeeId} เช็คเอาต์สำเร็จ!`);
+                    debugLog('✅ เช็คเอาต์สำเร็จ');
                     
                     // รีเซ็ตปุ่ม
                     btn.disabled = false;
                     loadingSpan.style.display = 'none';
                     isProcessingCheckout = false;
                     
-                    console.log('=== เสร็จสิ้น checkOut function ===');
+                    debugLog('🔓 รีเซ็ตสถานะ checkout เสร็จ');
                 },
                 function(error) {
-                    console.error('GPS Error:', error);
+                    debugLog(`❌ GPS Error ขณะ checkout: ${error.message}`);
                     showAlert('error', 'ไม่สามารถรับตำแหน่งได้ กรุณาลองใหม่');
                     
                     // รีเซ็ตปุ่ม
@@ -773,15 +826,15 @@
                 },
                 {
                     enableHighAccuracy: true,
-                    timeout: 15000,  // เพิ่มเวลารอเป็น 15 วินาที
-                    maximumAge: 0    // ไม่ใช้ cache เก่า
+                    timeout: 15000,
+                    maximumAge: 0
                 }
             );
         }
 
-        // ฟังก์ชันทดสอบ checkout
+        // ===== ฟังก์ชันทดสอบ =====
         function forceCheckout() {
-            console.log('=== Force Checkout (ทดสอบ) ===');
+            debugLog('🔧 Force Checkout (ทดสอบ)');
             
             if (!currentUser) {
                 alert('กรุณาเข้าสู่ระบบก่อน');
@@ -796,11 +849,13 @@
             isCheckedIn = true;
             updateStatus();
             
+            debugLog('✅ บังคับตั้งสถานะเป็นเช็คอินแล้ว');
             alert('บังคับตั้งสถานะเป็นเช็คอินแล้ว กรุณาลองเช็คเอาต์');
         }
 
-        // ฟังก์ชันทดสอบส่ง webhook
         function testWebhook() {
+            debugLog('🧪 ทดสอบ Webhook');
+            
             if (!currentUser) {
                 alert('กรุณาเข้าสู่ระบบก่อน');
                 return;
@@ -819,12 +874,81 @@
                 }
             };
             
-            console.log('ทดสอบส่ง webhook...');
+            debugLog('🚀 ส่งข้อมูลทดสอบ...');
             sendToN8N(testData);
-            alert('ทดสอบส่ง webhook แล้ว ดู console log (กด F12)');
+            alert('ทดสอบส่ง webhook แล้ว ดู debug log');
         }
 
-        // อัพเดทข้อมูล webhook
+        // ===== ฟังก์ชันส่ง Webhook =====
+        function sendToN8N(data) {
+            const webhookUrl = 'https://vizhvian.app.n8n.cloud/webhook-test/955a2d77-64d6-4c9f-b652-2eef8007dc6f';
+            
+            debugLog(`🌐 เริ่มส่งข้อมูลไป n8n: ${data.action}`);
+            
+            const completeData = {
+                action: data.action,
+                employeeId: data.employeeId,
+                passcode: data.passcode,
+                timestamp: data.timestamp,
+                datetime: data.datetime,
+                location: data.location,
+                lat: data.location.latitude,
+                lng: data.location.longitude,
+                accuracy: data.location.accuracy,
+                user_id: data.employeeId,
+                user_code: data.passcode,
+                check_type: data.action,
+                check_time: data.timestamp,
+                check_datetime: data.datetime,
+                unique_id: `${data.employeeId}_${data.action}_${Date.now()}`
+            };
+            
+            debugLog(`📤 ข้อมูลที่ส่ง: ${JSON.stringify(completeData)}`);
+            
+            // ส่งแบบปกติก่อน
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(completeData)
+            })
+            .then(response => {
+                debugLog(`📨 Response status: ${response.status}`);
+                
+                if (response.ok) {
+                    debugLog('✅ ส่งข้อมูลไป n8n สำเร็จ (โหมดปกติ)');
+                    return response.text();
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            })
+            .then(responseText => {
+                debugLog(`📨 Response body: ${responseText}`);
+            })
+            .catch(error => {
+                debugLog(`❌ ส่งแบบปกติไม่ได้: ${error.message}`);
+                debugLog('🔄 ลองส่งแบบ no-cors...');
+                
+                // หากไม่ได้ ลองแบบ no-cors
+                return fetch(webhookUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(completeData)
+                })
+                .then(() => {
+                    debugLog('✅ ส่งข้อมูลไป n8n แล้ว (no-cors mode)');
+                })
+                .catch(err => {
+                    debugLog(`❌ ส่งข้อมูลไม่ได้เลย: ${err.message}`);
+                });
+            });
+        }
+
+        // ===== ฟังก์ชันจัดการข้อมูล =====
         function updateWebhookData(record) {
             const webhookDiv = document.getElementById('webhookData');
             webhookDiv.innerHTML = `ข้อมูลล่าสุด:
@@ -834,25 +958,21 @@ URL สำหรับ webhook:
 GET: ${window.location.origin}${window.location.pathname}?data=latest
 POST: ส่งข้อมูลไปยัง n8n webhook endpoint`;
             
-            // เก็บข้อมูลล่าสุดสำหรับ webhook
             localStorage.setItem('latestWebhookData', JSON.stringify(record));
         }
 
-        // บันทึกประวัติ
         function saveToHistory(record) {
             let history = JSON.parse(localStorage.getItem('checkinHistory') || '[]');
-            history.unshift(record); // เพิ่มที่ด้านบน
-            if (history.length > 100) history.pop(); // เก็บไว้แค่ 100 รายการ
+            history.unshift(record);
+            if (history.length > 100) history.pop();
             localStorage.setItem('checkinHistory', JSON.stringify(history));
             loadHistory();
         }
 
-        // โหลดประวัติ
         function loadHistory() {
             const history = JSON.parse(localStorage.getItem('checkinHistory') || '[]');
             const historyDiv = document.getElementById('historyList');
             
-            // แสดงเฉพาะประวัติของผู้ใช้ปัจจุบัน
             const userHistory = currentUser ? history.filter(record => record.employeeId === currentUser.employeeId) : history;
             
             if (userHistory.length === 0) {
@@ -876,13 +996,11 @@ POST: ส่งข้อมูลไปยัง n8n webhook endpoint`;
             `).join('');
         }
 
-        // โหลดสถานะ
         function loadStatus() {
             if (currentUser) {
                 const storedStatus = localStorage.getItem('checkedIn');
                 const storedUser = localStorage.getItem('checkinUser');
                 
-                // ตรวจสอบว่าเป็นผู้ใช้คนเดียวกันที่เช็คอิน
                 if (storedStatus === 'true' && storedUser === currentUser.employeeId) {
                     isCheckedIn = true;
                 } else {
@@ -893,7 +1011,6 @@ POST: ส่งข้อมูลไปยัง n8n webhook endpoint`;
             }
         }
 
-        // อัพเดทสถานะ
         function updateStatus() {
             const statusDiv = document.getElementById('currentStatus');
             if (isCheckedIn) {
@@ -909,82 +1026,7 @@ POST: ส่งข้อมูลไปยัง n8n webhook endpoint`;
             }
         }
 
-        // ฟังก์ชันส่งข้อมูลไป n8n - แก้ไขแล้ว
-        function sendToN8N(data) {
-            const webhookUrl = 'https://vizhvian.app.n8n.cloud/webhook-test/955a2d77-64d6-4c9f-b652-2eef8007dc6f';
-            
-            console.log('=== เริ่มส่งข้อมูลไป n8n ===');
-            console.log('Action:', data.action);
-            console.log('Employee ID:', data.employeeId);
-            console.log('Webhook URL:', webhookUrl);
-            
-            // สร้างข้อมูลให้ครบถ้วน
-            const completeData = {
-                action: data.action,
-                employeeId: data.employeeId,
-                passcode: data.passcode,
-                timestamp: data.timestamp,
-                datetime: data.datetime,
-                location: data.location,
-                // เพิ่มข้อมูลสำรอง
-                lat: data.location.latitude,
-                lng: data.location.longitude,
-                accuracy: data.location.accuracy,
-                user_id: data.employeeId,
-                user_code: data.passcode,
-                check_type: data.action,
-                check_time: data.timestamp,
-                check_datetime: data.datetime,
-                unique_id: `${data.employeeId}_${data.action}_${Date.now()}`
-            };
-            
-            console.log('ข้อมูลที่ส่ง:', JSON.stringify(completeData, null, 2));
-            
-            // ส่งแบบปกติก่อน
-            fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(completeData)
-            })
-            .then(response => {
-                console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers);
-                
-                if (response.ok) {
-                    console.log('✅ ส่งข้อมูลไป n8n สำเร็จ (โหมดปกติ)');
-                    return response.text();
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-            })
-            .then(responseText => {
-                console.log('Response body:', responseText);
-            })
-            .catch(error => {
-                console.log('❌ ส่งแบบปกติไม่ได้:', error);
-                console.log('🔄 ลองส่งแบบ no-cors...');
-                
-                // หากไม่ได้ ลองแบบ no-cors
-                return fetch(webhookUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(completeData)
-                })
-                .then(() => {
-                    console.log('✅ ส่งข้อมูลไป n8n แล้ว (no-cors mode)');
-                })
-                .catch(err => {
-                    console.error('❌ ส่งข้อมูลไม่ได้เลย:', err);
-                });
-            });
-        }
-
-        // PWA Installation
+        // ===== PWA Functions =====
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
@@ -1006,12 +1048,11 @@ POST: ส่งข้อมูลไปยัง n8n webhook endpoint`;
             deferredPrompt = null;
         });
 
-        // ซ่อนปุ่มติดตั้งเมื่อติดตั้งแล้ว
         window.addEventListener('appinstalled', () => {
             document.getElementById('installPrompt').style.display = 'none';
         });
 
-        // API สำหรับ webhook (เพิ่มเติม)
+        // ===== API Functions =====
         window.getLatestData = function() {
             return JSON.parse(localStorage.getItem('latestWebhookData') || 'null');
         };
@@ -1020,14 +1061,14 @@ POST: ส่งข้อมูลไปยัง n8n webhook endpoint`;
             return JSON.parse(localStorage.getItem('checkinHistory') || '[]');
         };
 
-        // Service Worker Registration
+        // ===== Service Worker =====
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/sw.js')
                     .then(function(registration) {
-                        console.log('SW registered: ', registration);
+                        debugLog('✅ Service Worker registered');
                     }, function(registrationError) {
-                        console.log('SW registration failed: ', registrationError);
+                        debugLog(`❌ Service Worker registration failed: ${registrationError}`);
                     });
             });
         }
